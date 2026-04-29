@@ -24,6 +24,12 @@
       "package": "cl.trabajosya.app",
       "edgeToEdgeEnabled": true
     },
-    "plugins": []
+    "plugins": [],
+    "extra": {
+      "eas": {
+        "projectId": "3d729bf3-3d63-4e4c-a8b0-ddf21ac7afda"
+      }
+    },
+    "owner": "smboss"
   }
 }
