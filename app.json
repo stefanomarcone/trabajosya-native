@@ -25,8 +25,7 @@
         "backgroundColor": "#1d4ed8"
       },
       "package": "cl.trabajosya.twa",
-      "versionCode": 10,
-      "edgeToEdgeEnabled": true
+      "versionCode": 11
     },
     "plugins": [],
     "extra": {

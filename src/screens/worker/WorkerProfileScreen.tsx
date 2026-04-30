@@ -1,14 +1,29 @@
-import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native'
+import { View, Text, TouchableOpacity, ScrollView, Image, Switch } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { useColorScheme } from 'nativewind'
 import { useAuth } from '../../context/AuthContext'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import Toast from 'react-native-toast-message'
 
-export default function WorkerProfileScreen() {
-  const { appUser, logout } = useAuth()
+export default function WorkerProfileScreen({ navigation }: any) {
+  const { appUser, logout, toggleMode } = useAuth()
+  const { colorScheme, setColorScheme } = useColorScheme()
+  const isDark = colorScheme === 'dark'
 
   async function handleLogout() {
     await logout()
     Toast.show({ type: 'success', text1: 'Sesión cerrada' })
+  }
+
+  async function handleToggleDark(val: boolean) {
+    const scheme = val ? 'dark' : 'light'
+    setColorScheme(scheme)
+    await AsyncStorage.setItem('colorScheme', scheme)
+  }
+
+  function handleSwitchMode() {
+    toggleMode()
+    Toast.show({ type: 'info', text1: 'Cambiando a modo Empleador' })
   }
 
   const tools = appUser?.tools_available ?? []
@@ -57,6 +72,50 @@ export default function WorkerProfileScreen() {
             <Text className="text-white text-3xl font-bold">${(appUser?.available_balance ?? 0).toLocaleString('es-CL')}</Text>
           </View>
         )}
+
+        {/* Preferencias */}
+        <View className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
+          {/* Editar perfil */}
+          <TouchableOpacity
+            onPress={() => navigation.navigate('EditProfile')}
+            className="flex-row items-center justify-between px-4 py-3.5 border-b border-gray-100 dark:border-gray-800"
+          >
+            <View className="flex-row items-center gap-3">
+              <Text className="text-lg">✏️</Text>
+              <Text className="text-sm font-medium text-gray-700 dark:text-gray-300">Editar perfil</Text>
+            </View>
+            <Text className="text-gray-400">›</Text>
+          </TouchableOpacity>
+
+          {/* Dark mode */}
+          <View className="flex-row items-center justify-between px-4 py-3.5 border-b border-gray-100 dark:border-gray-800">
+            <View className="flex-row items-center gap-3">
+              <Text className="text-lg">{isDark ? '🌙' : '☀️'}</Text>
+              <Text className="text-sm font-medium text-gray-700 dark:text-gray-300">Modo oscuro</Text>
+            </View>
+            <Switch
+              value={isDark}
+              onValueChange={handleToggleDark}
+              trackColor={{ false: '#e5e7eb', true: '#2563eb' }}
+              thumbColor="white"
+            />
+          </View>
+
+          {/* Cambiar a empleador */}
+          <TouchableOpacity
+            onPress={handleSwitchMode}
+            className="flex-row items-center justify-between px-4 py-3.5"
+          >
+            <View className="flex-row items-center gap-3">
+              <Text className="text-lg">🔄</Text>
+              <View>
+                <Text className="text-sm font-medium text-gray-700 dark:text-gray-300">Cambiar a empleador</Text>
+                <Text className="text-xs text-gray-400 dark:text-gray-500">Publicá tus propios trabajos</Text>
+              </View>
+            </View>
+            <Text className="text-gray-400">›</Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Herramientas */}
         {tools.length > 0 && (

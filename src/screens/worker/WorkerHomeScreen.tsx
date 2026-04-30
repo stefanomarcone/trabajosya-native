@@ -1,35 +1,16 @@
 import { useState, useEffect, useCallback } from 'react'
-import {
-  View, Text, ScrollView, TouchableOpacity, RefreshControl,
-  FlatList, TextInput,
-} from 'react-native'
+import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { collection, query, where, orderBy, getDocs, limit } from 'firebase/firestore'
+import { collection, query, where, orderBy, getDocs } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../context/AuthContext'
-import type { Job, Contract } from '../../types'
-import { JOB_CATEGORIES } from '../../types'
-
-const TABS = ['Explorar', 'Mis actividades'] as const
+import type { Contract } from '../../types'
 
 export default function WorkerHomeScreen({ navigation }: any) {
   const { appUser } = useAuth()
-  const [tab, setTab] = useState<typeof TABS[number]>('Explorar')
-  const [jobs, setJobs] = useState<Job[]>([])
   const [contracts, setContracts] = useState<Contract[]>([])
-  const [categoryFilter, setCategoryFilter] = useState('')
   const [refreshing, setRefreshing] = useState(false)
   const [loading, setLoading] = useState(true)
-
-  const loadJobs = useCallback(async () => {
-    try {
-      const q = categoryFilter
-        ? query(collection(db, 'jobs'), where('status', '==', 'open'), where('category', '==', categoryFilter), orderBy('created_at', 'desc'), limit(30))
-        : query(collection(db, 'jobs'), where('status', '==', 'open'), orderBy('created_at', 'desc'), limit(30))
-      const snap = await getDocs(q)
-      setJobs(snap.docs.map(d => ({ id: d.id, ...d.data() } as Job)))
-    } catch {}
-  }, [categoryFilter])
 
   const loadContracts = useCallback(async () => {
     if (!appUser) return
@@ -45,24 +26,28 @@ export default function WorkerHomeScreen({ navigation }: any) {
 
   useEffect(() => {
     setLoading(true)
-    Promise.all([loadJobs(), loadContracts()]).finally(() => setLoading(false))
-  }, [loadJobs, loadContracts])
+    loadContracts().finally(() => setLoading(false))
+  }, [loadContracts])
 
   async function onRefresh() {
     setRefreshing(true)
-    await Promise.all([loadJobs(), loadContracts()])
+    await loadContracts()
     setRefreshing(false)
   }
 
   const activeContracts = contracts.filter(c => c.escrow_status === 'held' || c.escrow_status === 'partial')
   const completedContracts = contracts.filter(c => c.escrow_status === 'released')
+  const balance = appUser?.available_balance ?? 0
+
+  const hour = new Date().getHours()
+  const greeting = hour < 12 ? 'Buenos días' : hour < 19 ? 'Buenas tardes' : 'Buenas noches'
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50 dark:bg-gray-950">
       {/* Header */}
       <View className="px-4 py-3 flex-row items-center justify-between bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
         <View>
-          <Text className="text-xs text-gray-500 dark:text-gray-400">Hola,</Text>
+          <Text className="text-xs text-gray-500 dark:text-gray-400">{greeting},</Text>
           <Text className="text-base font-bold text-gray-900 dark:text-white">{appUser?.display_name}</Text>
         </View>
         <TouchableOpacity
@@ -73,98 +58,37 @@ export default function WorkerHomeScreen({ navigation }: any) {
         </TouchableOpacity>
       </View>
 
-      {/* Tabs */}
-      <View className="flex-row bg-gray-100 dark:bg-gray-800 mx-4 mt-4 mb-3 rounded-xl p-1 gap-1">
-        {TABS.map(t => (
-          <TouchableOpacity
-            key={t}
-            onPress={() => setTab(t)}
-            className={`flex-1 py-2 rounded-lg items-center ${tab === t ? 'bg-white dark:bg-gray-700 shadow-sm' : ''}`}
-          >
-            <Text className={`text-sm font-medium ${tab === t ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'}`}>{t}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ padding: 16, gap: 14 }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2563eb" />}
+      >
+        {/* Hero card */}
+        <View className="bg-primary-600 rounded-2xl p-5">
+          <Text className="text-primary-100 text-sm mb-1">Tocá el <Text className="font-bold text-white">+</Text> para buscar</Text>
+          <Text className="text-white text-xl font-bold leading-snug">Encontrá trabajos{'\n'}cerca tuyo</Text>
+          {balance > 0 && (
+            <View className="mt-4 pt-4 border-t border-primary-500">
+              <Text className="text-primary-200 text-xs">Balance disponible</Text>
+              <Text className="text-white text-2xl font-bold">${balance.toLocaleString('es-CL')}</Text>
+            </View>
+          )}
+        </View>
 
-      {tab === 'Explorar' ? (
-        <>
-          {/* Category filters */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4 mb-3" contentContainerStyle={{ gap: 8 }}>
-            {['Todos', ...JOB_CATEGORIES].map(cat => {
-              const isActive = cat === 'Todos' ? !categoryFilter : categoryFilter === cat
-              return (
-                <TouchableOpacity
-                  key={cat}
-                  onPress={() => setCategoryFilter(cat === 'Todos' ? '' : cat)}
-                  className={`px-3 py-1.5 rounded-full border ${isActive ? 'bg-primary-600 border-primary-600' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}
-                >
-                  <Text className={`text-xs font-medium ${isActive ? 'text-white' : 'text-gray-600 dark:text-gray-400'}`}>{cat}</Text>
-                </TouchableOpacity>
-              )
-            })}
-          </ScrollView>
-
-          <FlatList
-            data={jobs}
-            keyExtractor={item => item.id}
-            contentContainerStyle={{ padding: 16, paddingTop: 0, gap: 10 }}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2563eb" />}
-            ListEmptyComponent={
-              loading ? (
-                <View className="gap-3">
-                  {[1,2,3].map(i => <View key={i} className="h-28 bg-gray-200 dark:bg-gray-800 rounded-2xl animate-pulse" />)}
-                </View>
-              ) : (
-                <View className="items-center py-16">
-                  <Text className="text-3xl mb-3">🔍</Text>
-                  <Text className="text-gray-400 dark:text-gray-500 text-sm">No hay trabajos disponibles</Text>
-                </View>
-              )
-            }
-            renderItem={({ item: job }) => (
-              <TouchableOpacity
-                onPress={() => navigation.navigate('JobDetail', { jobId: job.id })}
-                className="bg-white dark:bg-gray-900 rounded-2xl p-4 border border-gray-100 dark:border-gray-800"
-              >
-                <View className="flex-row items-start justify-between mb-2">
-                  <View className="bg-primary-50 dark:bg-primary-900/20 rounded-lg px-2.5 py-1">
-                    <Text className="text-xs font-semibold text-primary-700 dark:text-primary-300">{job.category}</Text>
-                  </View>
-                  {job.price_fixed ? (
-                    <Text className="text-base font-bold text-gray-900 dark:text-white">${job.price_fixed.toLocaleString('es-CL')}</Text>
-                  ) : (
-                    <Text className="text-sm font-medium text-gray-400 dark:text-gray-500">A cotizar</Text>
-                  )}
-                </View>
-                <Text className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed" numberOfLines={2}>
-                  {job.description}
-                </Text>
-                {job.address ? (
-                  <Text className="text-xs text-gray-400 dark:text-gray-500 mt-2">📍 {job.address}</Text>
-                ) : null}
-                {job.date ? (
-                  <Text className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                    📅 {new Date(job.date).toLocaleDateString('es-CL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                  </Text>
-                ) : null}
-              </TouchableOpacity>
-            )}
-          />
-        </>
-      ) : (
-        <ScrollView
-          className="flex-1"
-          contentContainerStyle={{ padding: 16, gap: 16 }}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2563eb" />}
-        >
-          {/* Activos */}
-          <View>
-            <Text className="font-semibold text-gray-900 dark:text-white mb-3">⏳ Trabajos activos</Text>
-            {activeContracts.length === 0 ? (
-              <View className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5 items-center">
-                <Text className="text-gray-400 dark:text-gray-500 text-sm">No tenés trabajos activos</Text>
-              </View>
-            ) : activeContracts.map(c => (
+        {/* Trabajos activos */}
+        <View>
+          <Text className="font-semibold text-gray-900 dark:text-white mb-3">
+            ⏳ Trabajos activos {activeContracts.length > 0 && <Text className="text-primary-600 dark:text-primary-400">({activeContracts.length})</Text>}
+          </Text>
+          {loading ? (
+            <View className="bg-gray-200 dark:bg-gray-800 rounded-2xl h-20 animate-pulse" />
+          ) : activeContracts.length === 0 ? (
+            <View className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5 items-center">
+              <Text className="text-2xl mb-2">💼</Text>
+              <Text className="text-gray-400 dark:text-gray-500 text-sm text-center">No tenés trabajos activos{'\n'}Tocá el + para explorar</Text>
+            </View>
+          ) : (
+            activeContracts.map(c => (
               <TouchableOpacity
                 key={c.id}
                 onPress={() => navigation.navigate('ContractDetail', { contractId: c.id })}
@@ -175,36 +99,43 @@ export default function WorkerHomeScreen({ navigation }: any) {
                 </View>
                 <View className="flex-1">
                   <Text className="font-semibold text-gray-900 dark:text-white text-sm">
-                    {c.completion_confirmed_worker ? 'Esperando empleador' : 'En progreso'}
+                    {c.completion_confirmed_worker ? 'Esperando confirmación' : 'En progreso'}
                   </Text>
                   <Text className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                     ${c.agreed_amount.toLocaleString('es-CL')}
                   </Text>
                 </View>
-                <Text className="text-gray-400 dark:text-gray-500">›</Text>
+                <Text className="text-gray-400">›</Text>
+              </TouchableOpacity>
+            ))
+          )}
+        </View>
+
+        {/* Historial */}
+        {completedContracts.length > 0 && (
+          <View>
+            <Text className="font-semibold text-gray-900 dark:text-white mb-3">✅ Completados</Text>
+            {completedContracts.slice(0, 3).map(c => (
+              <TouchableOpacity
+                key={c.id}
+                onPress={() => navigation.navigate('ContractDetail', { contractId: c.id })}
+                className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 mb-2 flex-row items-center gap-3"
+              >
+                <View className="w-10 h-10 bg-green-50 dark:bg-green-900/30 rounded-xl items-center justify-center">
+                  <Text className="text-lg">✅</Text>
+                </View>
+                <View className="flex-1">
+                  <Text className="font-semibold text-gray-900 dark:text-white text-sm">Trabajo finalizado</Text>
+                  <Text className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                    {new Date(c.created_at).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' })}
+                  </Text>
+                </View>
+                <Text className="font-bold text-gray-700 dark:text-gray-300">${c.agreed_amount.toLocaleString('es-CL')}</Text>
               </TouchableOpacity>
             ))}
           </View>
-
-          {/* Completados */}
-          {completedContracts.length > 0 && (
-            <View>
-              <Text className="font-semibold text-gray-900 dark:text-white mb-3">✅ Finalizados</Text>
-              {completedContracts.slice(0, 5).map(c => (
-                <View key={c.id} className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 mb-2 flex-row items-center gap-3">
-                  <View className="w-10 h-10 bg-green-50 dark:bg-green-900/30 rounded-xl items-center justify-center">
-                    <Text className="text-lg">✅</Text>
-                  </View>
-                  <View className="flex-1">
-                    <Text className="font-semibold text-gray-900 dark:text-white text-sm">Completado</Text>
-                  </View>
-                  <Text className="font-bold text-gray-700 dark:text-gray-300">${c.agreed_amount.toLocaleString('es-CL')}</Text>
-                </View>
-              ))}
-            </View>
-          )}
-        </ScrollView>
-      )}
+        )}
+      </ScrollView>
     </SafeAreaView>
   )
 }

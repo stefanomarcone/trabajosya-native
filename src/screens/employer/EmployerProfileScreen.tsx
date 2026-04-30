@@ -1,14 +1,29 @@
-import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native'
+import { View, Text, TouchableOpacity, ScrollView, Image, Switch } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { useColorScheme } from 'nativewind'
 import { useAuth } from '../../context/AuthContext'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import Toast from 'react-native-toast-message'
 
 export default function EmployerProfileScreen({ navigation }: any) {
-  const { appUser, logout } = useAuth()
+  const { appUser, logout, toggleMode } = useAuth()
+  const { colorScheme, setColorScheme } = useColorScheme()
+  const isDark = colorScheme === 'dark'
 
   async function handleLogout() {
     await logout()
     Toast.show({ type: 'success', text1: 'Sesión cerrada' })
+  }
+
+  async function handleToggleDark(val: boolean) {
+    const scheme = val ? 'dark' : 'light'
+    setColorScheme(scheme)
+    await AsyncStorage.setItem('colorScheme', scheme)
+  }
+
+  function handleSwitchMode() {
+    toggleMode()
+    Toast.show({ type: 'info', text1: 'Cambiando a modo Trabajador' })
   }
 
   const er = appUser?.employer_rating
@@ -17,12 +32,7 @@ export default function EmployerProfileScreen({ navigation }: any) {
   return (
     <SafeAreaView className="flex-1 bg-gray-50 dark:bg-gray-950">
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
-        <View className="flex-row items-center justify-between">
-          <Text className="text-xl font-bold text-gray-900 dark:text-white">Mi perfil</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('EditProfile')}>
-            <Text className="text-sm text-primary-600 dark:text-primary-400 font-medium">✏️ Editar</Text>
-          </TouchableOpacity>
-        </View>
+        <Text className="text-xl font-bold text-gray-900 dark:text-white">Mi perfil</Text>
 
         {/* Header */}
         <View className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5">
@@ -62,7 +72,51 @@ export default function EmployerProfileScreen({ navigation }: any) {
           )}
         </View>
 
-        {/* Reputation */}
+        {/* Preferencias */}
+        <View className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
+          {/* Editar perfil */}
+          <TouchableOpacity
+            onPress={() => navigation.navigate('EditProfile')}
+            className="flex-row items-center justify-between px-4 py-3.5 border-b border-gray-100 dark:border-gray-800"
+          >
+            <View className="flex-row items-center gap-3">
+              <Text className="text-lg">✏️</Text>
+              <Text className="text-sm font-medium text-gray-700 dark:text-gray-300">Editar perfil</Text>
+            </View>
+            <Text className="text-gray-400">›</Text>
+          </TouchableOpacity>
+
+          {/* Dark mode */}
+          <View className="flex-row items-center justify-between px-4 py-3.5 border-b border-gray-100 dark:border-gray-800">
+            <View className="flex-row items-center gap-3">
+              <Text className="text-lg">{isDark ? '🌙' : '☀️'}</Text>
+              <Text className="text-sm font-medium text-gray-700 dark:text-gray-300">Modo oscuro</Text>
+            </View>
+            <Switch
+              value={isDark}
+              onValueChange={handleToggleDark}
+              trackColor={{ false: '#e5e7eb', true: '#2563eb' }}
+              thumbColor="white"
+            />
+          </View>
+
+          {/* Cambiar a trabajador */}
+          <TouchableOpacity
+            onPress={handleSwitchMode}
+            className="flex-row items-center justify-between px-4 py-3.5"
+          >
+            <View className="flex-row items-center gap-3">
+              <Text className="text-lg">🔄</Text>
+              <View>
+                <Text className="text-sm font-medium text-gray-700 dark:text-gray-300">Cambiar a trabajador</Text>
+                <Text className="text-xs text-gray-400 dark:text-gray-500">Explorá trabajos disponibles</Text>
+              </View>
+            </View>
+            <Text className="text-gray-400">›</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Reputación */}
         {er && er.count > 0 && (
           <View className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4">
             <Text className="font-semibold text-gray-900 dark:text-white mb-3">Reputación como empleador</Text>
@@ -94,7 +148,10 @@ export default function EmployerProfileScreen({ navigation }: any) {
         )}
 
         {/* Cerrar sesión */}
-        <TouchableOpacity onPress={handleLogout} className="w-full border border-red-200 dark:border-red-900 rounded-2xl py-3.5 items-center mt-2">
+        <TouchableOpacity
+          onPress={handleLogout}
+          className="w-full border border-red-200 dark:border-red-900 rounded-2xl py-3.5 items-center mt-2"
+        >
           <Text className="text-red-500 dark:text-red-400 font-medium text-sm">Cerrar sesión</Text>
         </TouchableOpacity>
       </ScrollView>
