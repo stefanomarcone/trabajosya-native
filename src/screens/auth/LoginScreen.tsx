@@ -2,7 +2,7 @@ import { useState } from 'react'
 import {
   View, Text, TextInput, TouchableOpacity,
   KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator,
-  StyleSheet,
+  StyleSheet, Image,
 } from 'react-native'
 import { useAuth } from '../../context/AuthContext'
 import Toast from 'react-native-toast-message'
@@ -31,36 +31,25 @@ export default function LoginScreen({ navigation }: any) {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={{ flex: 1, backgroundColor: '#1d4ed8' }}
+      style={styles.root}
     >
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
+        contentContainerStyle={styles.scroll}
         keyboardShouldPersistTaps="handled"
         bounces={false}
       >
-        {/* Hero section - blue background */}
-        <View style={styles.hero}>
-          {/* Logo integrado */}
-          <View style={styles.logoRow}>
-            <View style={styles.iconBox}>
-              <Text style={styles.bolt}>⚡</Text>
-            </View>
-            <View>
-              <Text style={styles.brandName}>TrabajosYa</Text>
-              <Text style={styles.brandSub}>Conectamos personas con soluciones</Text>
-            </View>
-          </View>
-
-          {/* Tagline */}
-          <View style={styles.taglineBox}>
-            <Text style={styles.tagline}>Trabajadores · Empleadores · Confianza</Text>
-          </View>
+        {/* Gradient background top area with logo */}
+        <View style={styles.bg}>
+          <Image
+            source={require('../../../assets/logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
         </View>
 
-        {/* Form card - white */}
+        {/* White card */}
         <View style={styles.card}>
-          <Text style={styles.title}>Iniciar sesión</Text>
-          <Text style={styles.subtitle}>Bienvenido de vuelta</Text>
+          <Text style={styles.tagline}>Conectá con trabajadores verificados</Text>
 
           {/* Email */}
           <Text style={styles.label}>Email</Text>
@@ -76,7 +65,7 @@ export default function LoginScreen({ navigation }: any) {
           />
 
           {/* Contraseña */}
-          <Text style={[styles.label, { marginTop: 16 }]}>Contraseña</Text>
+          <Text style={[styles.label, { marginTop: 14 }]}>Contraseña</Text>
           <TextInput
             value={password}
             onChangeText={setPassword}
@@ -85,14 +74,6 @@ export default function LoginScreen({ navigation }: any) {
             secureTextEntry
             style={styles.input}
           />
-
-          {/* Olvidé contraseña */}
-          <TouchableOpacity
-            onPress={() => navigation.navigate('ForgotPassword')}
-            style={{ alignSelf: 'flex-end', marginTop: 8 }}
-          >
-            <Text style={styles.forgot}>¿Olvidaste tu contraseña?</Text>
-          </TouchableOpacity>
 
           {/* Botón */}
           <TouchableOpacity
@@ -106,7 +87,14 @@ export default function LoginScreen({ navigation }: any) {
               : <Text style={styles.btnText}>Ingresar</Text>}
           </TouchableOpacity>
 
-          {/* Registro */}
+          {/* Links */}
+          <TouchableOpacity
+            onPress={() => navigation.navigate('ForgotPassword')}
+            style={styles.forgotWrap}
+          >
+            <Text style={styles.forgot}>¿Olvidaste tu contraseña?</Text>
+          </TouchableOpacity>
+
           <View style={styles.registerRow}>
             <Text style={styles.registerText}>¿No tenés cuenta? </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Register')}>
@@ -120,74 +108,37 @@ export default function LoginScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  hero: {
+  root: {
+    flex: 1,
     backgroundColor: '#1d4ed8',
-    paddingTop: 80,
-    paddingBottom: 48,
-    paddingHorizontal: 28,
-    gap: 20,
   },
-  logoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
+  scroll: {
+    flexGrow: 1,
   },
-  iconBox: {
-    width: 60,
-    height: 60,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    borderRadius: 18,
+  bg: {
+    backgroundColor: '#1d4ed8',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.3)',
+    paddingTop: 80,
+    paddingBottom: 40,
   },
-  bolt: {
-    fontSize: 30,
-  },
-  brandName: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: '#ffffff',
-    letterSpacing: -0.5,
-  },
-  brandSub: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.7)',
-    marginTop: 2,
-  },
-  taglineBox: {
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    alignSelf: 'flex-start',
-  },
-  tagline: {
-    color: 'rgba(255,255,255,0.85)',
-    fontSize: 12,
-    fontWeight: '500',
-    letterSpacing: 0.2,
+  logo: {
+    width: 180,
+    height: 70,
   },
   card: {
     flex: 1,
-    backgroundColor: '#f9fafb',
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     paddingHorizontal: 24,
-    paddingTop: 32,
-    paddingBottom: 40,
-    marginTop: -20,
+    paddingTop: 28,
+    paddingBottom: 48,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 4,
-  },
-  subtitle: {
+  tagline: {
     fontSize: 14,
     color: '#6b7280',
+    textAlign: 'center',
     marginBottom: 28,
   },
   label: {
@@ -199,48 +150,45 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: '#ffffff',
     borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 14,
+    borderColor: '#d1d5db',
+    borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 15,
+    paddingVertical: 13,
+    fontSize: 14,
     color: '#111827',
+  },
+  btn: {
+    backgroundColor: '#2563eb',
+    borderRadius: 12,
+    paddingVertical: 15,
+    alignItems: 'center',
+    marginTop: 22,
+  },
+  btnText: {
+    color: 'white',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  forgotWrap: {
+    alignItems: 'center',
+    marginTop: 16,
   },
   forgot: {
     fontSize: 13,
     color: '#2563eb',
-    fontWeight: '500',
-  },
-  btn: {
-    backgroundColor: '#2563eb',
-    borderRadius: 14,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 24,
-    shadowColor: '#2563eb',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  btnText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '700',
-    letterSpacing: 0.2,
   },
   registerRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 24,
+    marginTop: 12,
   },
   registerText: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#6b7280',
   },
   registerLink: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#2563eb',
     fontWeight: '600',
   },

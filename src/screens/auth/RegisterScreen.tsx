@@ -2,7 +2,7 @@ import { useState } from 'react'
 import {
   View, Text, TextInput, TouchableOpacity,
   KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator,
-  StyleSheet,
+  StyleSheet, Image,
 } from 'react-native'
 import { useAuth } from '../../context/AuthContext'
 import Toast from 'react-native-toast-message'
@@ -42,31 +42,28 @@ export default function RegisterScreen({ navigation }: any) {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={{ flex: 1, backgroundColor: '#1d4ed8' }}
+      style={styles.root}
     >
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
+        contentContainerStyle={styles.scroll}
         keyboardShouldPersistTaps="handled"
         bounces={false}
       >
-        {/* Hero */}
-        <View style={styles.hero}>
+        {/* Header azul con logo */}
+        <View style={styles.bg}>
+          <Image
+            source={require('../../../assets/logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </View>
+
+        {/* Card blanca */}
+        <View style={styles.card}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.back}>
             <Text style={styles.backText}>← Volver</Text>
           </TouchableOpacity>
-          <View style={styles.logoRow}>
-            <View style={styles.iconBox}>
-              <Text style={styles.bolt}>⚡</Text>
-            </View>
-            <View>
-              <Text style={styles.brandName}>TrabajosYa</Text>
-              <Text style={styles.brandSub}>Creá tu cuenta gratis</Text>
-            </View>
-          </View>
-        </View>
 
-        {/* Form card */}
-        <View style={styles.card}>
           <Text style={styles.title}>Crear cuenta</Text>
           <Text style={styles.subtitle}>Empezá a usar TrabajosYa hoy</Text>
 
@@ -135,70 +132,51 @@ export default function RegisterScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  hero: {
+  root: {
+    flex: 1,
     backgroundColor: '#1d4ed8',
-    paddingTop: 60,
-    paddingBottom: 44,
-    paddingHorizontal: 28,
-    gap: 20,
   },
-  back: {
-    marginBottom: 4,
+  scroll: {
+    flexGrow: 1,
   },
-  backText: {
-    color: 'rgba(255,255,255,0.8)',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  logoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-  },
-  iconBox: {
-    width: 56,
-    height: 56,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    borderRadius: 16,
+  bg: {
+    backgroundColor: '#1d4ed8',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.3)',
+    paddingTop: 60,
+    paddingBottom: 32,
   },
-  bolt: {
-    fontSize: 28,
-  },
-  brandName: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: '#ffffff',
-    letterSpacing: -0.5,
-  },
-  brandSub: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.7)',
-    marginTop: 2,
+  logo: {
+    width: 180,
+    height: 70,
   },
   card: {
     flex: 1,
-    backgroundColor: '#f9fafb',
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     paddingHorizontal: 24,
-    paddingTop: 32,
-    paddingBottom: 40,
-    marginTop: -20,
+    paddingTop: 24,
+    paddingBottom: 48,
+  },
+  back: {
+    marginBottom: 16,
+  },
+  backText: {
+    color: '#2563eb',
+    fontSize: 14,
+    fontWeight: '500',
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '700',
     color: '#111827',
     marginBottom: 4,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#6b7280',
-    marginBottom: 24,
+    marginBottom: 22,
   },
   label: {
     fontSize: 13,
@@ -209,43 +187,37 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: '#ffffff',
     borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 14,
+    borderColor: '#d1d5db',
+    borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 15,
+    paddingVertical: 13,
+    fontSize: 14,
     color: '#111827',
   },
   btn: {
     backgroundColor: '#2563eb',
-    borderRadius: 14,
-    paddingVertical: 16,
+    borderRadius: 12,
+    paddingVertical: 15,
     alignItems: 'center',
-    marginTop: 24,
-    shadowColor: '#2563eb',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    elevation: 6,
+    marginTop: 22,
   },
   btnText: {
     color: 'white',
-    fontSize: 16,
-    fontWeight: '700',
-    letterSpacing: 0.2,
+    fontSize: 15,
+    fontWeight: '600',
   },
   loginRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 24,
+    marginTop: 16,
   },
   loginText: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#6b7280',
   },
   loginLink: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#2563eb',
     fontWeight: '600',
   },
