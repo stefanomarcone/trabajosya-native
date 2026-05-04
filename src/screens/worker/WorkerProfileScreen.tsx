@@ -1,29 +1,15 @@
-import { View, Text, TouchableOpacity, ScrollView, Image, Switch } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { useColorScheme } from 'nativewind'
+import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native'
+import { Pencil, LogOut, CheckCircle2, Wrench, Star } from 'lucide-react-native'
 import { useAuth } from '../../context/AuthContext'
-import AsyncStorage from '@react-native-async-storage/async-storage'
+import ScreenLayout from '../../components/ScreenLayout'
 import Toast from 'react-native-toast-message'
 
 export default function WorkerProfileScreen({ navigation }: any) {
-  const { appUser, logout, toggleMode } = useAuth()
-  const { colorScheme, setColorScheme } = useColorScheme()
-  const isDark = colorScheme === 'dark'
+  const { appUser, logout } = useAuth()
 
   async function handleLogout() {
     await logout()
     Toast.show({ type: 'success', text1: 'Sesión cerrada' })
-  }
-
-  async function handleToggleDark(val: boolean) {
-    const scheme = val ? 'dark' : 'light'
-    setColorScheme(scheme)
-    await AsyncStorage.setItem('colorScheme', scheme)
-  }
-
-  function handleSwitchMode() {
-    toggleMode()
-    Toast.show({ type: 'info', text1: 'Cambiando a modo Empleador' })
   }
 
   const tools = appUser?.tools_available ?? []
@@ -31,11 +17,9 @@ export default function WorkerProfileScreen({ navigation }: any) {
   const totalJobs = ratingEntries.reduce((s, [, v]) => s + v.count, 0)
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50 dark:bg-gray-950">
+    <ScreenLayout>
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
-        <Text className="text-xl font-bold text-gray-900 dark:text-white">Mi perfil</Text>
-
-        {/* Header */}
+        {/* Header card */}
         <View className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5">
           <View className="flex-row items-center gap-4 mb-3">
             <View className="w-16 h-16 bg-primary-100 dark:bg-primary-900/40 rounded-full items-center justify-center overflow-hidden">
@@ -56,71 +40,31 @@ export default function WorkerProfileScreen({ navigation }: any) {
                 </Text>
               )}
             </View>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('EditProfile')}
+              className="p-2 rounded-full"
+            >
+              <Pencil size={18} color="#2563eb" />
+            </TouchableOpacity>
           </View>
+
           {appUser?.bio ? <Text className="text-sm text-gray-600 dark:text-gray-400">{appUser.bio}</Text> : null}
+
           {appUser?.id_status === 'approved' && (
-            <View className="mt-3 flex-row items-center gap-1.5 bg-green-50 dark:bg-green-900/20 rounded-xl px-3 py-2">
-              <Text className="text-green-600 dark:text-green-400 text-sm font-medium">✅ Identidad verificada</Text>
+            <View className="mt-3 flex-row items-center gap-2 bg-green-50 dark:bg-green-900/20 rounded-xl px-3 py-2">
+              <CheckCircle2 size={16} color="#10b981" />
+              <Text className="text-green-600 dark:text-green-400 text-sm font-medium">Identidad verificada</Text>
             </View>
           )}
-        </View>
-
-        {/* Balance */}
-        {(appUser?.available_balance ?? 0) > 0 && (
-          <View className="bg-primary-600 rounded-2xl p-5">
-            <Text className="text-primary-100 text-xs font-medium mb-1">Balance disponible</Text>
-            <Text className="text-white text-3xl font-bold">${(appUser?.available_balance ?? 0).toLocaleString('es-CL')}</Text>
-          </View>
-        )}
-
-        {/* Preferencias */}
-        <View className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
-          {/* Editar perfil */}
-          <TouchableOpacity
-            onPress={() => navigation.navigate('EditProfile')}
-            className="flex-row items-center justify-between px-4 py-3.5 border-b border-gray-100 dark:border-gray-800"
-          >
-            <View className="flex-row items-center gap-3">
-              <Text className="text-lg">✏️</Text>
-              <Text className="text-sm font-medium text-gray-700 dark:text-gray-300">Editar perfil</Text>
-            </View>
-            <Text className="text-gray-400">›</Text>
-          </TouchableOpacity>
-
-          {/* Dark mode */}
-          <View className="flex-row items-center justify-between px-4 py-3.5 border-b border-gray-100 dark:border-gray-800">
-            <View className="flex-row items-center gap-3">
-              <Text className="text-lg">{isDark ? '🌙' : '☀️'}</Text>
-              <Text className="text-sm font-medium text-gray-700 dark:text-gray-300">Modo oscuro</Text>
-            </View>
-            <Switch
-              value={isDark}
-              onValueChange={handleToggleDark}
-              trackColor={{ false: '#e5e7eb', true: '#2563eb' }}
-              thumbColor="white"
-            />
-          </View>
-
-          {/* Cambiar a empleador */}
-          <TouchableOpacity
-            onPress={handleSwitchMode}
-            className="flex-row items-center justify-between px-4 py-3.5"
-          >
-            <View className="flex-row items-center gap-3">
-              <Text className="text-lg">🔄</Text>
-              <View>
-                <Text className="text-sm font-medium text-gray-700 dark:text-gray-300">Cambiar a empleador</Text>
-                <Text className="text-xs text-gray-400 dark:text-gray-500">Publicá tus propios trabajos</Text>
-              </View>
-            </View>
-            <Text className="text-gray-400">›</Text>
-          </TouchableOpacity>
         </View>
 
         {/* Herramientas */}
         {tools.length > 0 && (
           <View className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4">
-            <Text className="font-semibold text-gray-900 dark:text-white mb-3">🔧 Herramientas</Text>
+            <View className="flex-row items-center gap-2 mb-3">
+              <Wrench size={16} color="#2563eb" />
+              <Text className="font-semibold text-gray-900 dark:text-white">Herramientas</Text>
+            </View>
             <View className="flex-row flex-wrap gap-2">
               {tools.map((tool, i) => (
                 <View key={i} className="bg-primary-50 dark:bg-primary-900/20 border border-primary-100 dark:border-primary-800 rounded-full px-3 py-1">
@@ -134,30 +78,31 @@ export default function WorkerProfileScreen({ navigation }: any) {
         {/* Reputación */}
         {ratingEntries.length > 0 && (
           <View className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4">
-            <Text className="font-semibold text-gray-900 dark:text-white mb-3">⭐ Reputación</Text>
-            <View className="gap-3">
-              {ratingEntries.map(([cat, data]) => (
-                <View key={cat} className="flex-row items-center justify-between">
-                  <Text className="text-sm text-gray-700 dark:text-gray-300 flex-1">{cat}</Text>
-                  <View className="flex-row items-center gap-2">
-                    <Text className="text-yellow-400">{'★'.repeat(Math.round(data.stars))}</Text>
-                    <Text className="text-sm font-semibold text-gray-900 dark:text-white">{data.stars.toFixed(1)}</Text>
-                    <Text className="text-xs text-gray-400 dark:text-gray-500">({data.count})</Text>
-                  </View>
-                </View>
-              ))}
+            <View className="flex-row items-center gap-2 mb-3">
+              <Star size={16} color="#f59e0b" fill="#f59e0b" />
+              <Text className="font-semibold text-gray-900 dark:text-white">Reputación</Text>
             </View>
+            {ratingEntries.map(([cat, data]) => (
+              <View key={cat} className="flex-row items-center justify-between mb-2">
+                <Text className="text-sm text-gray-700 dark:text-gray-300 flex-1">{cat}</Text>
+                <View className="flex-row items-center gap-2">
+                  <Text className="text-sm font-semibold text-gray-900 dark:text-white">{data.stars.toFixed(1)}</Text>
+                  <Text className="text-xs text-gray-400 dark:text-gray-500">({data.count})</Text>
+                </View>
+              </View>
+            ))}
           </View>
         )}
 
         {/* Cerrar sesión */}
         <TouchableOpacity
           onPress={handleLogout}
-          className="w-full border border-red-200 dark:border-red-900 rounded-2xl py-3.5 items-center mt-2"
+          className="w-full border border-red-200 dark:border-red-900 rounded-2xl py-3.5 items-center mt-2 flex-row justify-center gap-2"
         >
+          <LogOut size={16} color="#ef4444" />
           <Text className="text-red-500 dark:text-red-400 font-medium text-sm">Cerrar sesión</Text>
         </TouchableOpacity>
       </ScrollView>
-    </SafeAreaView>
+    </ScreenLayout>
   )
 }

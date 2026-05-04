@@ -1,7 +1,9 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
-import { Text, TouchableOpacity } from 'react-native'
+import { View, TouchableOpacity, Pressable } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { Home, Plus, User } from 'lucide-react-native'
+import { useColorScheme } from 'nativewind'
 import EmployerHomeScreen from '../screens/employer/EmployerHomeScreen'
 import CreateJobScreen from '../screens/employer/CreateJobScreen'
 import EmployerProfileScreen from '../screens/employer/EmployerProfileScreen'
@@ -14,53 +16,54 @@ import EditProfileScreen from '../screens/shared/EditProfileScreen'
 const Tab = createBottomTabNavigator()
 const Stack = createNativeStackNavigator()
 
-function TabIcon({ emoji, focused }: { emoji: string; focused: boolean }) {
-  return <Text style={{ fontSize: 22, opacity: focused ? 1 : 0.4 }}>{emoji}</Text>
-}
-
-function PlusTabButton({ onPress }: { onPress?: (...args: any[]) => void }) {
+/** Big floating + button used as middle tab */
+function PlusTabButton({ onPress, accessibilityState }: any) {
+  const focused = accessibilityState?.selected
   return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.85}
-      style={{
-        top: -18,
-        width: 58,
-        height: 58,
-        borderRadius: 29,
-        backgroundColor: '#2563eb',
-        alignItems: 'center',
-        justifyContent: 'center',
-        shadowColor: '#2563eb',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.45,
-        shadowRadius: 10,
-        elevation: 10,
-      }}
-    >
-      <Text style={{ color: 'white', fontSize: 30, lineHeight: 36, fontWeight: '300' }}>+</Text>
-    </TouchableOpacity>
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+      <Pressable
+        onPress={onPress}
+        style={({ pressed }) => ({
+          width: 52,
+          height: 52,
+          borderRadius: 26,
+          backgroundColor: focused ? '#1d4ed8' : '#2563eb',
+          alignItems: 'center',
+          justifyContent: 'center',
+          shadowColor: '#2563eb',
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: 0.4,
+          shadowRadius: 10,
+          elevation: 10,
+          transform: [{ scale: pressed ? 0.95 : 1 }],
+          marginTop: -16,
+        })}
+      >
+        <Plus size={26} color="white" strokeWidth={2.5} />
+      </Pressable>
+    </View>
   )
 }
 
 function EmployerTabs() {
   const insets = useSafeAreaInsets()
-  const tabBarHeight = 60 + insets.bottom
+  const { colorScheme } = useColorScheme()
+  const isDark = colorScheme === 'dark'
 
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#ffffff',
-          borderTopColor: '#e5e7eb',
-          height: tabBarHeight,
-          paddingBottom: insets.bottom + 6,
-          paddingTop: 6,
+          backgroundColor: isDark ? '#111827' : '#ffffff',
+          borderTopColor: isDark ? '#1f2937' : '#e5e7eb',
+          height: 64 + insets.bottom,
+          paddingBottom: insets.bottom + 8,
+          paddingTop: 8,
         },
         tabBarLabelStyle: { fontSize: 11, fontWeight: '500' },
         tabBarActiveTintColor: '#2563eb',
-        tabBarInactiveTintColor: '#9ca3af',
+        tabBarInactiveTintColor: isDark ? '#6b7280' : '#9ca3af',
       }}
     >
       <Tab.Screen
@@ -68,7 +71,7 @@ function EmployerTabs() {
         component={EmployerHomeScreen}
         options={{
           title: 'Inicio',
-          tabBarIcon: ({ focused }) => <TabIcon emoji="🏠" focused={focused} />,
+          tabBarIcon: ({ color }) => <Home size={22} color={color} />,
         }}
       />
       <Tab.Screen
@@ -76,7 +79,8 @@ function EmployerTabs() {
         component={CreateJobScreen}
         options={{
           title: '',
-          tabBarButton: (props) => <PlusTabButton onPress={props.onPress ?? undefined} />,
+          tabBarLabel: () => null,
+          tabBarButton: (props) => <PlusTabButton {...props} />,
         }}
       />
       <Tab.Screen
@@ -84,7 +88,7 @@ function EmployerTabs() {
         component={EmployerProfileScreen}
         options={{
           title: 'Perfil',
-          tabBarIcon: ({ focused }) => <TabIcon emoji="👤" focused={focused} />,
+          tabBarIcon: ({ color }) => <User size={22} color={color} />,
         }}
       />
     </Tab.Navigator>
